@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMAC | Hanshi K.S. Sekar – Grandmaster of Karate</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --black: #080808;
+    --deep: #0d0d0d;
+    --red: #c8102e;
+    --red-dark: #8b0a1e;
+    --gold: #d4a017;
+    --gold-light: #f0c040;
+    --white: #f5f0e8;
+    --muted: #7a7a7a;
+    --panel: rgba(255,255,255,0.03);
+    --border: rgba(212,160,23,0.2);
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  #cursor {
+    position: fixed; width: 12px; height: 12px;
+    background: var(--gold); border-radius: 50%;
+    pointer-events: none; z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s ease, background 0.2s;
+    mix-blend-mode: difference;
+  }
+  #cursor-trail {
+    position: fixed; width: 36px; height: 36px;
+    border: 1px solid var(--gold); border-radius: 50%;
+    pointer-events: none; z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: all 0.25s ease;
+    opacity: 0.5;
+  }
+
+  /* CANVAS */
+  #hero-canvas {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100; padding: 20px 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(8,8,8,0.9), transparent);
+    backdrop-filter: blur(2px);
+  }
+  .nav-logo-img {
+    width: 64px; height: 64px; border-radius: 50%;
+    border: 2px solid var(--gold);
+    box-shadow: 0 0 18px rgba(212,160,23,0.45);
+    object-fit: cover;
+    transition: transform 0.3s, box-shadow 0.3s;
+    flex-shrink: 0;
+  }
+  .nav-logo-img:hover {
+    transform: scale(1.08) rotate(4deg);
+    box-shadow: 0 0 36px rgba(212,160,23,0.7);
+  }
+  .nav-center {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .nav-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px; letter-spacing: 5px;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(212,160,23,0.5);
+  }
+  .nav-title span { color: var(--red); }
+  .nav-contact-flash {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px; letter-spacing: 3px;
+    color: var(--white);
+    animation: contactFlash 1.4s ease-in-out infinite;
+    text-decoration: none;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .nav-contact-flash .phone-icon { font-size: 14px; }
+  .flash-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--red);
+    animation: dotPulse 1.4s ease-in-out infinite;
+    display: inline-block;
+  }
+  @keyframes contactFlash {
+    0%, 100% { color: var(--gold); text-shadow: 0 0 12px rgba(212,160,23,0.8); }
+    50% { color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.9); }
+  }
+  @keyframes dotPulse {
+    0%, 100% { transform: scale(1); opacity: 1; background: var(--red); }
+    50% { transform: scale(1.6); opacity: 0.7; background: var(--gold); }
+  }
+  .nav-links { display: flex; gap: 40px; list-style: none; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+
+  /* HERO */
+  #hero {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 0 40px;
+    overflow: hidden;
+  }
+  .hero-eyebrow {
+    font-size: 11px; letter-spacing: 6px; text-transform: uppercase;
+    color: var(--red); margin-bottom: 24px;
+    font-weight: 500;
+    animation: fadeUp 1s ease 0.3s both;
+  }
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(72px, 12vw, 160px);
+    line-height: 0.9;
+    color: var(--white);
+    letter-spacing: 6px;
+    animation: fadeUp 1s ease 0.5s both;
+  }
+  .hero-title .gold { color: var(--gold); text-shadow: 0 0 60px rgba(212,160,23,0.4); }
+  .hero-title .outline {
+    -webkit-text-stroke: 1px var(--white);
+    color: transparent;
+  }
+  .hero-dan {
+    margin-top: 24px;
+    font-family: 'Noto Serif', serif;
+    font-style: italic;
+    font-size: clamp(16px, 2.5vw, 22px);
+    color: var(--muted);
+    animation: fadeUp 1s ease 0.7s both;
+  }
+  .hero-dan em { color: var(--gold); font-style: normal; }
+  .hero-scroll {
+    position: absolute; bottom: 40px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    animation: fadeUp 1s ease 1.2s both;
+  }
+  .hero-scroll span { font-size: 10px; letter-spacing: 4px; color: var(--muted); text-transform: uppercase; }
+  .scroll-line {
+    width: 1px; height: 60px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+
+  /* BELT STRIP */
+  .belt-strip {
+    position: relative; z-index: 1;
+    background: var(--red);
+    padding: 20px 0; overflow: hidden;
+  }
+  .belt-ticker {
+    display: flex; gap: 60px;
+    animation: ticker 20s linear infinite;
+    white-space: nowrap;
+  }
+  .belt-ticker span {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px; letter-spacing: 4px;
+    color: var(--gold);
+  }
+  .belt-ticker .sep { color: rgba(255,255,255,0.3); }
+
+  /* SECTIONS GENERIC */
+  section {
+    position: relative; z-index: 1;
+    padding: 120px 0;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 60px; }
+  .section-label {
+    font-size: 10px; letter-spacing: 6px; text-transform: uppercase;
+    color: var(--red); margin-bottom: 16px; font-weight: 500;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 6vw, 80px);
+    line-height: 1; letter-spacing: 3px;
+    margin-bottom: 60px;
+  }
+
+  /* ABOUT */
+  #about { background: var(--deep); }
+  .about-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 80px; align-items: center;
+  }
+  .about-visual {
+    position: relative;
+  }
+  .dan-tower {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .dan-bar {
+    height: 48px; display: flex; align-items: center;
+    padding: 0 20px; position: relative; overflow: hidden;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
+  }
+  .dan-bar .dan-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px; letter-spacing: 2px; position: relative; z-index: 1;
+  }
+  .dan-bar .dan-year {
+    margin-left: auto; font-size: 11px;
+    color: rgba(255,255,255,0.5); position: relative; z-index: 1;
+  }
+  .dan-bar::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--red); opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .dan-bar:hover::before { opacity: 1; }
+  .dan-bar.active { background: var(--gold); }
+  .dan-bar.active .dan-label { color: var(--black); }
+  .dan-bar.active .dan-year { color: rgba(0,0,0,0.6); }
+  .dan-bar:not(.active) { background: rgba(255,255,255,0.05); }
+
+  .about-text p {
+    font-size: 16px; line-height: 1.9; color: rgba(245,240,232,0.7);
+    margin-bottom: 20px;
+    font-family: 'Noto Serif', serif;
+  }
+  .about-text p strong { color: var(--gold); font-family: 'Inter', sans-serif; font-size: 13px; letter-spacing: 1px; }
+  .stat-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 24px; margin-top: 40px;
+  }
+  .stat { text-align: center; }
+  .stat-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 56px; color: var(--gold);
+    line-height: 1;
+  }
+  .stat-desc { font-size: 11px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+
+  /* TIMELINE */
+  #journey { background: var(--black); }
+  .timeline { position: relative; padding-left: 40px; }
+  .timeline::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 1px; background: linear-gradient(to bottom, transparent, var(--gold), var(--red), transparent);
+  }
+  .t-item {
+    position: relative; margin-bottom: 60px; padding-left: 40px;
+    opacity: 0; transform: translateX(-20px);
+    transition: all 0.6s ease;
+  }
+  .t-item.visible { opacity: 1; transform: translateX(0); }
+  .t-dot {
+    position: absolute; left: -48px; top: 6px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--red); border: 2px solid var(--gold);
+    box-shadow: 0 0 20px rgba(200,16,46,0.5);
+  }
+  .t-year {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px; color: var(--gold);
+    line-height: 1; margin-bottom: 8px;
+  }
+  .t-title {
+    font-size: 14px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--white); margin-bottom: 10px; font-weight: 500;
+  }
+  .t-body {
+    font-family: 'Noto Serif', serif;
+    font-size: 15px; line-height: 1.8;
+    color: rgba(245,240,232,0.6);
+  }
+  .timeline-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0 80px;
+  }
+
+  /* DOJOS */
+  #dojos { background: var(--deep); }
+  .dojo-cards {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+  }
+  .dojo-card {
+    background: var(--panel); border: 1px solid var(--border);
+    padding: 40px 32px; position: relative; overflow: hidden;
+    transition: all 0.4s ease;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+  }
+  .dojo-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(200,16,46,0.08), transparent);
+    opacity: 0; transition: opacity 0.4s;
+  }
+  .dojo-card:hover { border-color: var(--red); transform: translateY(-4px); }
+  .dojo-card:hover::before { opacity: 1; }
+  .dojo-icon {
+    font-size: 36px; margin-bottom: 20px; display: block;
+  }
+  .dojo-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px; color: rgba(212,160,23,0.1);
+    position: absolute; top: 20px; right: 20px; line-height: 1;
+  }
+  .dojo-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 2px;
+    color: var(--white); margin-bottom: 12px;
+  }
+  .dojo-text {
+    font-size: 14px; line-height: 1.7;
+    color: rgba(245,240,232,0.55);
+  }
+
+  /* LEGACY / FAMILY */
+  #legacy { background: var(--black); }
+  .legacy-inner {
+    display: grid; grid-template-columns: 1fr 1.2fr; gap: 80px; align-items: center;
+  }
+  .quote-block {
+    position: relative; padding: 40px;
+    border-left: 3px solid var(--gold);
+    background: var(--panel);
+  }
+  .quote-mark {
+    font-family: 'Noto Serif', serif;
+    font-size: 120px; color: var(--red); opacity: 0.15;
+    position: absolute; top: -20px; left: 20px; line-height: 1;
+    font-style: italic;
+  }
+  .quote-text {
+    font-family: 'Noto Serif', serif;
+    font-size: 20px; line-height: 1.7; font-style: italic;
+    color: var(--white); position: relative; z-index: 1;
+  }
+  .quote-attr {
+    margin-top: 20px; font-size: 11px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--gold);
+  }
+  .family-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  .family-card {
+    background: var(--panel); border: 1px solid var(--border);
+    padding: 24px 20px; text-align: center;
+    transition: border-color 0.3s;
+  }
+  .family-card:hover { border-color: var(--gold); }
+  .family-medal { font-size: 28px; margin-bottom: 8px; }
+  .family-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px; letter-spacing: 2px; color: var(--white);
+  }
+  .family-role { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .family-card.highlight { grid-column: 1 / -1; border-color: var(--gold); background: rgba(212,160,23,0.05); }
+  .family-card.highlight .family-medal { font-size: 40px; }
+  .family-card.highlight .family-name { font-size: 22px; color: var(--gold); }
+
+  /* CTA */
+  #cta {
+    background: linear-gradient(135deg, var(--red-dark), var(--black) 60%);
+    text-align: center; padding: 160px 40px;
+    position: relative; overflow: hidden;
+  }
+  #cta::before {
+    content: 'SMAC';
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30vw; color: rgba(255,255,255,0.02);
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap; pointer-events: none;
+  }
+  .cta-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 7vw, 90px); letter-spacing: 4px;
+    margin-bottom: 20px; position: relative;
+  }
+  .cta-sub {
+    font-family: 'Noto Serif', serif;
+    font-size: 18px; font-style: italic;
+    color: rgba(245,240,232,0.6); margin-bottom: 48px; position: relative;
+  }
+  .btn-gold {
+    display: inline-block; padding: 18px 52px;
+    background: var(--gold); color: var(--black);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px; letter-spacing: 4px;
+    text-decoration: none;
+    clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+    transition: all 0.3s; position: relative;
+  }
+  .btn-gold:hover { background: var(--gold-light); transform: scale(1.03); }
+  .btn-outline {
+    display: inline-block; padding: 16px 48px;
+    border: 1px solid var(--gold); color: var(--gold);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px; letter-spacing: 4px;
+    text-decoration: none; margin-left: 16px;
+    clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+    transition: all 0.3s;
+  }
+  .btn-outline:hover { background: rgba(212,160,23,0.1); }
+
+  /* FOOTER */
+  footer {
+    background: #050505; padding: 40px 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    position: relative; z-index: 1;
+  }
+  .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold); letter-spacing: 4px; }
+  .footer-text { font-size: 12px; color: var(--muted); }
+  .footer-org { font-size: 11px; color: var(--muted); text-align: right; line-height: 1.7; }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; transform: scaleY(1); }
+    50% { opacity: 1; transform: scaleY(1.1); }
+  }
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(212,160,23,0.3); }
+    50% { box-shadow: 0 0 60px rgba(212,160,23,0.7); }
+  }
+
+  /* REVEAL */
+  .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* DIVIDER */
+  .gold-divider {
+    width: 60px; height: 3px;
+    background: linear-gradient(to right, var(--red), var(--gold));
+    margin-bottom: 32px;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    .container { padding: 0 24px; }
+    .about-grid, .legacy-inner, .timeline-grid { grid-template-columns: 1fr; gap: 40px; }
+    .dojo-cards { grid-template-columns: 1fr; }
+    .stat-row { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .family-grid { grid-template-columns: 1fr; }
+    .family-card.highlight { grid-column: 1; }
+    footer { flex-direction: column; gap: 20px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- STICKY CONTACT BAR -->
+<a href="tel:+919444037013" id="sticky-contact">
+  <span id="sticky-dot"></span>
+  📞 For Further Details Contact:
+  <strong>+91 94440 37013</strong>
+  <span id="sticky-dot2"></span>
+</a>
+
+<style>
+#sticky-contact {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 200;
+  background: linear-gradient(90deg, var(--red-dark), #1a0a00, var(--red-dark));
+  color: var(--gold);
+  text-align: center; padding: 12px 20px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px; letter-spacing: 3px;
+  text-decoration: none;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  border-top: 1px solid var(--gold);
+  animation: stickyGlow 1.6s ease-in-out infinite;
+  transition: background 0.3s;
+}
+#sticky-contact:hover { background: var(--red); color: #fff; }
+#sticky-contact strong { color: #fff; font-size: 20px; }
+#sticky-dot, #sticky-dot2 {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--gold); display: inline-block;
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+#sticky-dot2 { animation-delay: 0.7s; }
+@keyframes stickyGlow {
+  0%, 100% { box-shadow: 0 -4px 24px rgba(200,16,46,0.5); }
+  50% { box-shadow: 0 -4px 48px rgba(212,160,23,0.7); }
+}
+body { padding-bottom: 52px; }
+</style>
+
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
+<canvas id="hero-canvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <!-- Left logo: SMAC Ju-Go Ryu / Hanshi Sekar seal -->
+  <img class="nav-logo-img"
+       src="PHOTO-2026-06-13-10-16-21__1_.jpg"
+       alt="SMAC Ju-Go Ryu Karate Kobudo Organisation"
+       title="SMAC Ju-Go Ryu Karate Kobudo Organisation">
+
+  <!-- Center: title + flashing contact -->
+  <div class="nav-center">
+    <div class="nav-title">SM<span>A</span>C</div>
+    <a class="nav-contact-flash" href="tel:+919444037013">
+      <span class="flash-dot"></span>
+      <span class="phone-icon">📞</span>
+      +91 94440 37013
+      <span class="flash-dot"></span>
+    </a>
+  </div>
+
+  <!-- Right logo: World Martial Arts Buddha Temple -->
+  <img class="nav-logo-img"
+       src="PHOTO-2026-06-13-10-16-21__2_.jpg"
+       alt="World Martial Arts Buddha Temple and Technology"
+       title="World Martial Arts Buddha Temple and Technology">
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <p class="hero-eyebrow">Sekar's Martial Arts Centre · Est. 1976</p>
+  <h1 class="hero-title">
+    <span class="gold">HANSHI</span><br>
+    <span class="outline">K.S.</span><br>
+    SEKAR
+  </h1>
+  <p class="hero-dan">9th Dan Black Belt · <em>Karate &amp; Kobudo</em> · Okinawa, Japan</p>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- BELT TICKER -->
+<div class="belt-strip">
+  <div class="belt-ticker" id="ticker">
+    <span>SMAC JU-GO RYU</span><span class="sep">✦</span>
+    <span>9TH DAN BLACK BELT</span><span class="sep">✦</span>
+    <span>OKINAWA MASTER</span><span class="sep">✦</span>
+    <span>KENSHIKAI GO-JU RYU</span><span class="sep">✦</span>
+    <span>WORLD MARTIAL ARTS BUDDHA TEMPLE</span><span class="sep">✦</span>
+    <span>ASIAN CHIEF COACH</span><span class="sep">✦</span>
+    <span>BOARD OF DIRECTORS · INTERNATIONAL KENSHIKAI</span><span class="sep">✦</span>
+    <span>2000+ STUDENTS</span><span class="sep">✦</span>
+    <span>SMAC JU-GO RYU</span><span class="sep">✦</span>
+    <span>9TH DAN BLACK BELT</span><span class="sep">✦</span>
+    <span>OKINAWA MASTER</span><span class="sep">✦</span>
+    <span>KENSHIKAI GO-JU RYU</span><span class="sep">✦</span>
+    <span>WORLD MARTIAL ARTS BUDDHA TEMPLE</span><span class="sep">✦</span>
+    <span>ASIAN CHIEF COACH</span><span class="sep">✦</span>
+    <span>BOARD OF DIRECTORS · INTERNATIONAL KENSHIKAI</span><span class="sep">✦</span>
+    <span>2000+ STUDENTS</span><span class="sep">✦</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-visual reveal">
+        <p class="section-label">The Grandmaster</p>
+        <div class="gold-divider"></div>
+        <div class="dan-tower">
+          <div class="dan-bar"><span class="dan-label">1st Dan — Black Belt</span><span class="dan-year">1980s</span></div>
+          <div class="dan-bar"><span class="dan-label">6th Dan — Kenshikai Goju-Ryu</span><span class="dan-year">2003</span></div>
+          <div class="dan-bar"><span class="dan-label">7th Dan — Asian Chief Coach</span><span class="dan-year">2007</span></div>
+          <div class="dan-bar"><span class="dan-label">8th Dan — Youngest Indian</span><span class="dan-year">2013</span></div>
+          <div class="dan-bar active"><span class="dan-label">9th Dan — Board of Directors</span><span class="dan-year">2023</span></div>
+        </div>
+        <div class="stat-row" style="margin-top:40px">
+          <div class="stat"><div class="stat-number">50+</div><div class="stat-desc">Years of Karate</div></div>
+          <div class="stat"><div class="stat-number">2K+</div><div class="stat-desc">Students Trained</div></div>
+          <div class="stat"><div class="stat-number">8+</div><div class="stat-desc">Nations Competed</div></div>
+        </div>
+      </div>
+      <div class="about-text reveal">
+        <p class="section-label">Born to Fight · Built to Inspire</p>
+        <h2 class="section-title">From <span style="color:var(--red)">Fisherman's Son</span> to Global Grandmaster</h2>
+        <p>Born on <strong>10 August 1964</strong> into a humble fisherman's family in Neelangarai, Chennai, Sekar discovered karate at age 12. Inspired by Bruce Lee, he trained up to eight hours daily — shaping an iron will that would define his life.</p>
+        <p>He won <strong>three national championships</strong> (1984–86), set a world record sparring 200 black belts continuously, and became the <strong>first and youngest Indian</strong> to receive an 8th Dan directly from an Okinawan grandmaster — Kaicho Dr. Tetsuhiro Hokama.</p>
+        <p>In 2024, after a life-saving liver transplant (his daughter Sinthiya donated 70% of her liver), Sekar returned to karate training within six months — embodying the warrior spirit he has taught for decades.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JOURNEY -->
+<section id="journey">
+  <div class="container">
+    <p class="section-label reveal">The Path of a Warrior</p>
+    <h2 class="section-title reveal">Milestones &amp; <span style="color:var(--gold)">Battles</span></h2>
+    <div class="timeline-grid">
+      <div class="timeline">
+        <div class="t-item">
+          <div class="t-dot"></div>
+          <div class="t-year">1976</div>
+          <div class="t-title">The Spark</div>
+          <div class="t-body">Age 12. A fisherman's son begins training in karate. Eight hours of daily practice becomes his religion.</div>
+        </div>
+        <div class="t-item">
+          <div class="t-dot"></div>
+          <div class="t-year">1984–86</div>
+          <div class="t-title">National Champion</div>
+          <div class="t-body">Three consecutive national championship victories cement his reputation as one of India's finest fighters.</div>
+        </div>
+        <div class="t-item">
+          <div class="t-dot"></div>
+          <div class="t-year">1993</div>
+          <div class="t-title">Bronze Through Injury</div>
+          <div class="t-body">Wins a national bronze medal with a dislocated knee. Major surgery and six months of rehabilitation follow.</div>
+        </div>
+        <div class="t-item">
+          <div class="t-dot"></div>
+          <div class="t-year">1996</div>
+          <div class="t-title">World Record</div>
+          <div class="t-body">Continuously spars 200 black belts without a break — a feat witnessed and honoured by the Joint Commissioner of Police.</div>
+        </div>
+        <div class="t-item">
+          <div class="t-dot"></div>
+          <div class="t-year">2001</div>
+          <div class="t-title">Heavyweight Gold</div>
+          <div class="t-body">Powerful comeback at the RVT Mani Memorial Trophy. Then searches for the true Okinawan masters.</div>
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="t-item">
+          <div class="t-dot"></div>
+          <div class="t-year">2003</div>
+          <div class="t-title">World Championship · Okinawa</div>
+          <div class="t-body">Places 8th in Kobudo at the World Championship in Okinawa. Restarts as a white belt under Kaicho Dr. Hokama.</div>
+        </div>
+        <div class="t-item">
+          <div class="t-dot"></div>
+          <div class="t-year">2007</div>
+          <div class="t-title">Hokama World Cup</div>
+          <div class="t-body">Personally sponsors and organises the Hokama World Cup — 3,000 competitors from 8+ nations, Chennai.</div>
+        </div>
+        <div class="t-item">
+          <div class="t-dot"></div>
+          <div class="t-year">2013</div>
+          <div class="t-title">8th Dan · History Made</div>
+          <div class="t-body">Youngest and first Indian to receive 8th Dan directly from an Okinawan master. Asian Chief Coach of Kenshikai.</div>
+        </div>
+        <div class="t-item">
+          <div class="t-dot"></div>
+          <div class="t-year">2023–24</div>
+          <div class="t-title">Triumph Over Death</div>
+          <div class="t-body">Receives 9th Dan in Okinawa. Undergoes life-saving liver transplant. Returns to karate in six months. True warrior.</div>
+        </div>
+        <div class="t-item">
+          <div class="t-dot"></div>
+          <div class="t-year">2025</div>
+          <div class="t-title">Board of Directors · Kenshikai</div>
+          <div class="t-body">Appointed to the Board of Directors of the International Kenshikai Goju-Ryu Karate and Kobudo Organization.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DOJOS -->
+<section id="dojos">
+  <div class="container">
+    <p class="section-label reveal">The Dojo Network</p>
+    <h2 class="section-title reveal">Training. <span style="color:var(--red)">Discipline.</span> Service.</h2>
+    <div class="dojo-cards">
+      <div class="dojo-card reveal">
+        <span class="dojo-num">01</span>
+        <span class="dojo-icon">🥋</span>
+        <div class="dojo-title">SMAC Head Dojo</div>
+        <p class="dojo-text">4,700 sq. ft. fully equipped facility in Chennai with professional safety mats, dedicated kobudo (weapons) training areas, and state-of-the-art training infrastructure.</p>
+      </div>
+      <div class="dojo-card reveal">
+        <span class="dojo-num">02</span>
+        <span class="dojo-icon">🌏</span>
+        <div class="dojo-title">India-Wide Branches</div>
+        <p class="dojo-text">From a single dojo in Neelangarai in 2004, SMAC has grown to multiple branches across India, now training nearly 2,000 students in the authentic Goju-Ryu tradition.</p>
+      </div>
+      <div class="dojo-card reveal">
+        <span class="dojo-num">03</span>
+        <span class="dojo-icon">🙏</span>
+        <div class="dojo-title">Free Training for All</div>
+        <p class="dojo-text">Rooted in service — SMAC provides high-quality karate training to poor and deserving students, with completely free coaching for those who cannot afford the fees.</p>
+      </div>
+      <div class="dojo-card reveal">
+        <span class="dojo-num">04</span>
+        <span class="dojo-icon">⚔️</span>
+        <div class="dojo-title">Kobudo &amp; Weapons</div>
+        <p class="dojo-text">One of India's few institutions offering authentic Okinawan Kobudo (weapons) training under direct lineage from Kaicho Dr. Tetsuhiro Hokama, Japan.</p>
+      </div>
+      <div class="dojo-card reveal">
+        <span class="dojo-num">05</span>
+        <span class="dojo-icon">🏆</span>
+        <div class="dojo-title">Championship Factory</div>
+        <p class="dojo-text">All five of Hanshi Sekar's children have won national gold medals and represented India internationally — a family legacy unique in the history of Indian karate.</p>
+      </div>
+      <div class="dojo-card reveal">
+        <span class="dojo-num">06</span>
+        <span class="dojo-icon">🌐</span>
+        <div class="dojo-title">International Affiliation</div>
+        <p class="dojo-text">Officially affiliated with the International Kenshikai Goju-Ryu Karate and Kobudo Organization, Okinawa, Japan — one of the most respected karate bodies in the world.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LEGACY -->
+<section id="legacy">
+  <div class="container">
+    <p class="section-label reveal">The Warrior's Code</p>
+    <h2 class="section-title reveal">A <span style="color:var(--gold)">Family</span> of Champions</h2>
+    <div class="legacy-inner">
+      <div class="quote-block reveal">
+        <span class="quote-mark">"</span>
+        <p class="quote-text">From a fisherman's son with a Bruce Lee dream to a globally respected grandmaster — this is not a story of privilege. This is the story of what eight hours of practice a day, for fifty years, creates.</p>
+        <div class="quote-attr">— The Legacy of Hanshi K.S. Sekar</div>
+      </div>
+      <div class="reveal">
+        <p style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:20px">The Sekar Family · National Gold Medallists</p>
+        <div class="family-grid">
+          <div class="family-card highlight">
+            <div class="family-medal">🥇</div>
+            <div class="family-name">G. Sinthiya</div>
+            <div class="family-role">National Champion · Living Donor · Heart of the Family</div>
+          </div>
+          <div class="family-card">
+            <div class="family-medal">🥇</div>
+            <div class="family-name">Daughter 2</div>
+            <div class="family-role">National Gold Medallist · India Representative</div>
+          </div>
+          <div class="family-card">
+            <div class="family-medal">🥇</div>
+            <div class="family-name">Daughter 3</div>
+            <div class="family-role">National Gold Medallist · India Representative</div>
+          </div>
+          <div class="family-card">
+            <div class="family-medal">🥇</div>
+            <div class="family-name">Daughter 4</div>
+            <div class="family-role">National Gold Medallist · India Representative</div>
+          </div>
+          <div class="family-card">
+            <div class="family-medal">🥇</div>
+            <div class="family-name">Son</div>
+            <div class="family-role">National Gold Medallist · India Representative</div>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:16px;font-family:'Noto Serif',serif;font-style:italic">Honoured as "The Best Karate Family" by Kaicho Dr. Hokama, Okinawa, 2023</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="container">
+    <p class="hero-eyebrow" style="animation:none">Begin Your Journey</p>
+    <h2 class="cta-title">TRAIN UNDER<br><span style="color:var(--gold)">A LIVING LEGEND</span></h2>
+    <p class="cta-sub">Authentic Okinawan Goju-Ryu Karate &amp; Kobudo · Chennai, India</p>
+    <a href="mailto:info@smackarate.com" class="btn-gold">Contact SMAC</a>
+    <a href="#journey" class="btn-outline">Read the Story</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-logo">SMAC</div>
+    <div class="footer-text" style="margin-top:8px">Sekar's Martial Arts Centre · Est. 1976 · Chennai, India</div>
+  </div>
+  <div class="footer-text" style="text-align:center">
+    World Martial Arts Buddha Temple &amp; Technology<br>
+    Government Recognised · Reg. 15/2017
+  </div>
+  <div class="footer-org">
+    International Kenshikai Goju-Ryu<br>
+    Karate &amp; Kobudo Organization<br>
+    Okinawa, Japan
+  </div>
+</footer>
+
+<script>
+// CURSOR
+const cursor = document.getElementById('cursor');
+const trail = document.getElementById('cursor-trail');
+let mx = 0, my = 0;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx + 'px';
+  cursor.style.top = my + 'px';
+});
+setInterval(() => {
+  trail.style.left = mx + 'px';
+  trail.style.top = my + 'px';
+}, 80);
+
+// CANVAS PARTICLES
+const canvas = document.getElementById('hero-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.size = Math.random() * 1.5 + 0.3;
+    this.speedX = (Math.random() - 0.5) * 0.4;
+    this.speedY = -Math.random() * 0.6 - 0.2;
+    this.opacity = Math.random() * 0.6 + 0.1;
+    this.color = Math.random() > 0.7 ? '#d4a017' : Math.random() > 0.5 ? '#c8102e' : '#ffffff';
+  }
+  update() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    this.opacity -= 0.001;
+    if (this.y < -10 || this.opacity <= 0) this.reset();
+  }
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = this.opacity;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+for (let i = 0; i < 200; i++) particles.push(new Particle());
+
+// Kanjis for atmosphere
+const kanjis = ['空手', '武道', '剛柔', '武士', '道場', '黒帯', '拳', '型'];
+const floatingKanjis = Array.from({length: 8}, (_, i) => ({
+  char: kanjis[i % kanjis.length],
+  x: Math.random() * W,
+  y: Math.random() * H,
+  opacity: Math.random() * 0.05 + 0.02,
+  size: Math.random() * 60 + 40,
+  speed: Math.random() * 0.2 + 0.05,
+}));
+
+function drawKanjis() {
+  floatingKanjis.forEach(k => {
+    ctx.save();
+    ctx.globalAlpha = k.opacity;
+    ctx.fillStyle = '#d4a017';
+    ctx.font = `${k.size}px serif`;
+    ctx.fillText(k.char, k.x, k.y);
+    ctx.restore();
+    k.y -= k.speed;
+    if (k.y < -80) { k.y = H + 40; k.x = Math.random() * W; }
+  });
+}
+
+function animate() {
+  ctx.clearRect(0, 0, W, H);
+  // radial gradient overlay
+  const grd = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*0.7);
+  grd.addColorStop(0, 'rgba(200,16,46,0.04)');
+  grd.addColorStop(1, 'rgba(8,8,8,0)');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, W, H);
+  drawKanjis();
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(animate);
+}
+animate();
+
+// SCROLL REVEAL
+const revealEls = document.querySelectorAll('.reveal, .t-item');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 80);
+    }
+  });
+}, { threshold: 0.1 });
+revealEls.forEach(el => io.observe(el));
+
+// NAV scroll effect
+window.addEventListener('scroll', () => {
+  const nav = document.querySelector('nav');
+  nav.style.background = window.scrollY > 60
+    ? 'rgba(8,8,8,0.95)'
+    : 'linear-gradient(to bottom, rgba(8,8,8,0.9), transparent)';
+});
+
+// Dan bar 3D tilt
+document.querySelectorAll('.dojo-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width - 0.5) * 12;
+    const y = ((e.clientY - r.top) / r.height - 0.5) * -12;
+    card.style.transform = `perspective(600px) rotateY(${x}deg) rotateX(${y}deg) translateY(-4px)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+  });
+});
+</script>
+</body>
+</html>
